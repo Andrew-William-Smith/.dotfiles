@@ -25,3 +25,6 @@
 [submodule "vim/.vim/pack/awsmith/start/vim-surround"]
 	path = vim/.vim/pack/awsmith/start/vim-surround
 	url = https://github.com/tpope/vim-surround
+[submodule "cinnamon/.themes/skeuos-gtk"]
+	path = cinnamon/.themes/skeuos-gtk
+	url = https://github.com/daniruiz/skeuos-gtk
