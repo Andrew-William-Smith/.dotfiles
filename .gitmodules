@@ -28,3 +28,9 @@
 [submodule "cinnamon/.themes/skeuos-gtk"]
 	path = cinnamon/.themes/skeuos-gtk
 	url = https://github.com/daniruiz/skeuos-gtk
+[submodule "zsh/.zshplug/zsh-autosuggestions"]
+	path = zsh/.zshplug/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "zsh/.zshplug/fast-syntax-highlighting"]
+	path = zsh/.zshplug/fast-syntax-highlighting
+	url = https://github.com/zdharma-continuum/fast-syntax-highlighting
