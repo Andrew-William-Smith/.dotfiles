@@ -1,0 +1,33 @@
+{
+    // General editor settings
+    "editor.rulers": [80, 100, 120],
+    "editor.lineNumbers": "relative",
+    "editor.bracketPairColorization.enabled": true,
+    "files.insertFinalNewline": true,
+    // General security settings.
+    "telemetry.telemetryLevel": "off",
+    "security.workspace.trust.enabled": false,
+    "extensions.ignoreRecommendations": true,
+    // Typography.
+    "editor.fontLigatures": true,
+    "editor.fontFamily": "'Iosevka Collegiate Etoile', monospace",
+    "editor.fontSize": 15,
+    "editor.letterSpacing": 0.25,
+    "editor.lineHeight": 20,
+    "terminal.integrated.fontFamily": "'Iosevka Collegiate', monospace",
+    "terminal.integrated.fontSize": 14,
+    // Customize UI.  Note: monkey-patch is currently entirely broken on Linux.
+    "customizeUI.activityBar": "bottom",
+    "customizeUI.activityBarHideSettings": true,
+    "customizeUI.titleBar": "inline",
+    "window.titleBarStyle": "native",
+    // EditorConfig.
+    "editorconfig.generateAuto": false,
+    // Gruvbox Material.
+    "workbench.colorTheme": "Gruvbox Material Dark",
+    "gruvboxMaterial.darkContrast": "hard",
+    "gruvboxMaterial.darkWorkbench": "flat",
+    // Vim.
+    "vim.showMarksInGutter": true,
+    "vim.useSystemClipboard": true,
+}

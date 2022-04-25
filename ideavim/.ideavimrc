@@ -1,0 +1,13 @@
+" Copyright (c) 2022, Andrew Smith <aws@awsmith.us> :::::::::::: SOLI DEO GLORIA
+" SPDX-License-Identifier: GPL-3.0-or-later
+
+set ignorecase smartcase
+set number relativenumber
+
+" Built-in Vim plugins.
+set commentary
+set ideajoin
+set surround
+
+" Copy to the system clipboard by default.
+set clipboard+=unnamed

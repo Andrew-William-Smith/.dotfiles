@@ -1,0 +1,12 @@
+[user]
+    name = awsmith
+    email = aws@awsmith.us
+[core]
+    editor = vim
+[color]
+    diff = auto
+    status = auto
+    branch = auto
+[alias]
+    lol = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    update = commit --amend --reset-author

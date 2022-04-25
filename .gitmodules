@@ -1,0 +1,27 @@
+[submodule "vim/.vim/pack/awsmith/start/vim-sensible"]
+	path = vim/.vim/pack/awsmith/start/vim-sensible
+	url = https://github.com/tpope/vim-sensible
+[submodule "vim/.vim/pack/awsmith/start/gruvbox-material"]
+	path = vim/.vim/pack/awsmith/start/gruvbox-material
+	url = https://github.com/sainnhe/gruvbox-material
+[submodule "vim/.vim/pack/awsmith/start/seoul256.vim"]
+	path = vim/.vim/pack/awsmith/start/seoul256.vim
+	url = https://github.com/junegunn/seoul256.vim
+[submodule "vim/.vim/pack/awsmith/start/rainbow_parentheses.vim"]
+	path = vim/.vim/pack/awsmith/start/rainbow_parentheses.vim
+	url = https://github.com/junegunn/rainbow_parentheses.vim
+[submodule "vim/.vim/pack/awsmith/start/lightline.vim"]
+	path = vim/.vim/pack/awsmith/start/lightline.vim
+	url = https://github.com/itchyny/lightline.vim
+[submodule "vim/.vim/pack/awsmith/start/vim-better-whitespace"]
+	path = vim/.vim/pack/awsmith/start/vim-better-whitespace
+	url = https://github.com/ntpeters/vim-better-whitespace
+[submodule "vim/.vim/pack/awsmith/start/quick-scope"]
+	path = vim/.vim/pack/awsmith/start/quick-scope
+	url = https://github.com/unblevable/quick-scope
+[submodule "vim/.vim/pack/awsmith/start/vim-commentary"]
+	path = vim/.vim/pack/awsmith/start/vim-commentary
+	url = https://github.com/tpope/vim-commentary
+[submodule "vim/.vim/pack/awsmith/start/vim-surround"]
+	path = vim/.vim/pack/awsmith/start/vim-surround
+	url = https://github.com/tpope/vim-surround
