@@ -51,13 +51,30 @@
   :delight
   :config (global-company-mode))
 
+;;; Many LSP language modes require the ability to execute shell commands, many
+;;; of which rely upon the use of tools distributed with the respective languages
+;;; to properly configure the environment. Let's set the exec-path directly from
+;;; the shell so that it includes these tools regardless of how Emacs is run.
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+
 ;;; Many language-specific packages rely upon LSP (Language Server Protocol)
 ;;; support, so let's install and configure that package before the other
 ;;; packages' dependency resolution begins.
 (use-package lsp-mode
+  :init
+  ;; Disable minibuffer signature delay: superseded by lsp-ui-doc.
+  (setq lsp-signature-auto-activate nil
+        lsp-signature-render-documentation nil
+        lsp-headerline-breadcrumb-enable nil ; Disable breadcrumb bar.
+        lsp-ui-peek-enable nil               ; Disable lsp-peek entirely.
+        lsp-ui-doc-show-with-cursor t)       ; Display documentation in a posframe.
   :custom
-  (lsp-eldoc-render-all t)
-  (lsp-idle-delay 0.6))
+  (lsp-idle-delay 0.6)
+  ;; Add some additional UI features that integrate with LSP.
+  (use-package lsp-ui))
 
 ;;; Flycheck is another common dependency for error display.
 (use-package flycheck)
@@ -132,7 +149,7 @@
 ;;; Let's also show the current git diff in the fringe to gain a quick overview
 ;;; of the current version control status of a file.
 (use-package git-gutter-fringe
-  :delight
+  :delight git-gutter-mode
   :config
   ;; Render diff symbols in the mostly empty right fringe.
   (setq git-gutter:update-interval 1
@@ -174,6 +191,14 @@
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
+;;; Enable the use of custom code formatters, on which I have become wholly
+;;; dependent for even the most basic of formatting, directly from Emacs.
+(use-package reformatter
+  :config
+  (reformatter-define ocaml-format
+    :program "ocamlformat"
+    :args (list "--name" (buffer-file-name) "-")))
+
 ;;; Use SLIME to provide interaction with my Lisp interpreter of choice, SBCL.
 (use-package slime
   :config
@@ -183,6 +208,16 @@
   (use-package slime-company
     :after (slime company)
     :config (setq slime-company-completion 'fuzzy)))
+
+;;; Use Tuareg to provide language-specific features for OCaml and enable
+;;; ocaml-lsp to run in OCaml files.
+(use-package tuareg
+  :hook (tuareg-mode . lsp)
+  :bind (("C-c f" . ocaml-format-buffer))
+  :config
+  (set-face-attribute 'tuareg-font-lock-constructor-face nil
+                      :inherit 'font-lock-constant-face
+                      :foreground 'unspecified))
 
 ;;; Suggest completions for the key sequence currently in progress.
 (use-package which-key
@@ -199,7 +234,7 @@
 ;;; available at https://gist.github.com/Andrew-William-Smith/3d455d43ecd7780945269e5b6091882f
 (set-face-attribute 'default nil
                     :family "Iosevka Collegiate"
-                    :height 120)
+                    :height (if (eq system-type 'darwin) 140 120))
 (if (eq system-type 'darwin)
     ;; Enable font ligatures on macOS (emacs-mac-port).
     (mac-auto-operator-composition-mode)
@@ -305,7 +340,7 @@ current point, provided that it is outside the standard visible ASCII range.
 Returns NIL for characters in this range."
   (when (char-after)
     (let ((code-at-point (encode-char (char-after) 'unicode)))
-      (when (and (not (< 32 code-at-point 127)) ; Ignore visible characters
+      (when (and (not (< 32 code-at-point 127)) ; Ignore visible ASCII characters
                  (/= code-at-point 10)          ; ...and newlines
                  (/= code-at-point 32))         ; ...and spaces.
         (format " U+%04X %s"
@@ -417,3 +452,18 @@ Informational fortunes are, of course, of no utility to us."
       kept-new-versions 20
       kept-old-versions 5
       version-control t)    ; Add version numbers to backup filenames.
+
+;;; We don't want to override the default distribution's org-mode package by
+;;; installing it from ELPA, but we still need to customise a number of
+;;; behaviours, configured outside of their respective package below.
+(setq org-directory "~/org"                            ; Store all org-mode files in ~/org.
+      org-agenda-files '("~/org")
+      org-agenda-start-on-weekday nil                  ; Always start timeline on current day.
+      org-agenda-tags-todo-honor-ignore-options t      ; Always hide ignored options.
+      org-agenda-skip-deadline-if-done t               ; Hide completed deadlines.
+      org-agenda-skip-scheduled-if-done t              ; ...and scheduled events.
+      org-deadline-warning-days 7                      ; Only warn about deadlines in future weeks.
+      org-agenda-todo-ignore-deadlines 'near           ; Don't repeat deadlines on the current day.
+      org-agenda-start-with-log-mode t                 ; Show clock summary.
+      org-agenda-log-mode-items '(closed clock state)) ; ...containing all items.
+(global-set-key "\C-ca" 'org-agenda)
