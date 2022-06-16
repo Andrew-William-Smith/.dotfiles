@@ -166,15 +166,62 @@
     "XXXX....")
   (global-git-gutter-mode))
 
-;;; Use the modus themes by Protesilaos Stavrou.
+;;; Use the modus themes by Protesilaos Stavrou, with colour variations derived
+;;; from the ajgrf/parchment theme.
 (use-package modus-themes
-  :bind (("C-c l" . modus-themes-toggle)) ; Switch between light and dark.
+  :bind (("C-c l" . modus-themes-toggle))        ; Switch between light and dark.
   :init
-  (setq modus-themes-hl-line '(accented)  ; Emphasise the current line.
-        modus-themes-italic-constructs t  ; Set some constructs in italics.
-        modus-themes-region '(accented))  ; Make the region more colourful.
+  (setq modus-themes-hl-line '(intense accented) ; Emphasise the current line.
+        modus-themes-italic-constructs t         ; Set some constructs in italics.
+        modus-themes-prompts '(background bold)  ; Emphasise prompts more.
+        modus-themes-completions '((selection . (accented intense))
+                                   (popup . (accented intense)))
+        modus-themes-region '(accented)          ; Make the region more colourful.
+        modus-themes-syntax '(green-strings))    ; Render strings in green.
   (modus-themes-load-themes)
-  :config (modus-themes-load-operandi))   ; Use the light theme by default.
+
+  :config
+  ;; Adjust theme colours according to the white point specified below.
+  (defvar awsmith/modus-themes-tinted-white-point "#FFFFED")
+  (defun awsmith/modus-themes-adjust-white-point (colour white-point)
+    (let* ((white-point-rgb (color-name-to-rgb white-point))
+           (white-point-xyz (apply #'color-srgb-to-xyz white-point-rgb))
+           (colour-rgb (color-name-to-rgb colour))
+           (colour-xyz (apply #'color-srgb-to-xyz colour-rgb))
+           (colour-lab (apply #'color-xyz-to-lab colour-xyz))
+           (result-xyz (apply #'color-lab-to-xyz
+                              (append colour-lab (list white-point-xyz))))
+           (result-rgb (apply #'color-xyz-to-srgb result-xyz))
+           (r (color-clamp (nth 0 result-rgb)))
+           (g (color-clamp (nth 1 result-rgb)))
+           (b (color-clamp (nth 2 result-rgb))))
+      (color-rgb-to-hex r g b 2)))
+
+  (defun awsmith/modus-operandi-transform (_ hex)
+    (awsmith/modus-themes-adjust-white-point hex awsmith/modus-themes-tinted-white-point))
+  (defun awsmith/modus-vivendi-transform (name hex)
+    (let ((hex* (if (string-prefix-p "bg-" (symbol-name name))
+                    (color-lighten-name hex 10.0)
+                  hex)))
+      (awsmith/modus-themes-adjust-white-point hex* awsmith/modus-themes-tinted-white-point)))
+
+  (defun awsmith/modus-themes-tint-palette (palette transform)
+    (mapcar (lambda (colour)
+              (let ((name (car colour))
+                    (hex (cdr colour)))
+                (cons name (funcall transform name hex))))
+            palette))
+
+  ;; Apply white point transformations.
+  (setq modus-themes-operandi-color-overrides (awsmith/modus-themes-tint-palette
+                                               modus-themes-operandi-colors
+                                               #'awsmith/modus-operandi-transform))
+  (setq modus-themes-vivendi-color-overrides (awsmith/modus-themes-tint-palette
+                                              modus-themes-vivendi-colors
+                                              #'awsmith/modus-vivendi-transform))
+
+  ;; Use the light theme by default.
+  (modus-themes-load-operandi))
 
 ;;; Nyan Cat in the minibuffer! This is admittedly fairly stupid, but a
 ;;; screenshot of this mode was the impetus for my initial switch to Emacs while
