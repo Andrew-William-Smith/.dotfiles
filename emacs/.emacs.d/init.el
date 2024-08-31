@@ -105,6 +105,16 @@
   (use-package evil-commentary :config (evil-commentary-mode 1))
   ;; Provide some additional ex-mode commands beyond those provided by evil.
   (use-package evil-expat)
+  ;; Allow for numeric values to be {in,de}cremented using C-{a,z}, as in Vim.
+  (use-package evil-numbers
+    :config
+    (evil-define-key '(normal visual) 'global (kbd "C-a")
+      'evil-numbers/inc-at-pt)
+    (evil-define-key '(normal visual) 'global (kbd "C-z")
+      'evil-numbers/dec-at-pt)
+    (setq evil-numbers-case 'upcase
+          evil-numbers-separator-chars "_'"
+          evil-numbers-use-cursor-at-end-of-number t))
   ;; Emulate quick-scope.vim, which highlights target characters for <FfTt>.
   (use-package evil-quickscope
     :config
@@ -142,13 +152,43 @@
   (ivy-mode)
   (setq ivy-count-format "(%d/%d) "   ; Include the total count in ivy lists.
         ivy-initial-inputs-alist nil) ; Don't start ivy completions with ^.
+  ;; Enable per-letter fuzzy search for ivy completions. The default per-word
+  ;; search is enabled for swiper-isearch, as it is typically used to search for
+  ;; verbatim snippets of code.
+  (use-package flx :ensure t)
+  (setq ivy-re-builders-alist '((swiper-isearch . ivy--regex-plus)
+                                (t . ivy--regex-fuzzy)))
   ;; Display ivy completions at the center of the frame.
   (use-package ivy-posframe
     :delight
     :config
     (ivy-posframe-mode)
-    (setq ivy-posframe-display-functions-alist
+    (setq ivy-posframe-height-alist '((t . 30))
+          ivy-posframe-parameters '((alpha . 80))
+          ivy-posframe-display-functions-alist
           '((t . ivy-posframe-display-at-frame-center)))))
+
+;;; Use winum to allow for the selection of windows based on numeric
+;;; identifiers, providing a more convenient alternative to repeatedly C-w'ing
+;;; across the screen.
+(use-package winum
+  :init
+  (setq winum-keymap
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "C-w ;") 'winum-select-window-by-number)
+          (define-key map (kbd "C-w 0") 'winum-select-window-0-or-10)
+          (define-key map (kbd "C-w 1") 'winum-select-window-1)
+          (define-key map (kbd "C-w 2") 'winum-select-window-2)
+          (define-key map (kbd "C-w 3") 'winum-select-window-3)
+          (define-key map (kbd "C-w 4") 'winum-select-window-4)
+          (define-key map (kbd "C-w 5") 'winum-select-window-5)
+          (define-key map (kbd "C-w 6") 'winum-select-window-6)
+          (define-key map (kbd "C-w 7") 'winum-select-window-7)
+          (define-key map (kbd "C-w 8") 'winum-select-window-8)
+          (define-key map (kbd "C-w 9") 'winum-select-window-9)
+          map))
+  :config
+  (winum-mode))
 
 ;;; Git interaction via magit, so I can utilise the mental space that would have
 ;;; been occupied by arcane Git incantations for more useful information.
@@ -199,6 +239,18 @@
   ;; (load-theme 'ef-autumn t)
   (set-face-attribute 'bold nil :weight 'semi-bold))
 
+;;; While I typically prefer to work with light themes, at night or in low-light
+;;; settings, a darker theme becomes necessary to minimise eye strain. I prefer
+;;; two different themes depending upon the task: ef-autumn for writing in
+;;; org-mode, and vscode-dark-plus-theme when writing code. The former has
+;;; already been made available, but the latter still remains to be downloaded
+;;; and configured.
+(use-package vscode-dark-plus-theme
+  :config
+  (setq vscode-dark-plus-box-org-todo nil
+        vscode-dark-plus-scale-org-faces nil)
+  (set-face-attribute 'bold nil :weight 'semi-bold))
+
 ;;; Nyan Cat in the minibuffer! This is admittedly fairly stupid, but a
 ;;; screenshot of this mode was the impetus for my initial switch to Emacs while
 ;;; on vacation in Houston in 2014. As a previously staunch "Vim in TTY"
@@ -213,6 +265,19 @@
 ;;; programming modes.
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
+
+;;; Also highlight common comment keywords that necessitate particular attention
+;;; or action.
+(use-package hl-todo
+  :ensure t
+  :hook (prog-mode . hl-todo-mode)
+  :config
+  (setq hl-todo-keyword-faces '(("TODO" warning bold)
+                                ("FIXME" error bold)
+                                ("NB" font-lock-type-face bold)
+                                ("N\\.B\\." font-lock-type-face bold)
+                                ("NOTE" font-lock-type-face bold)
+                                ("awsmith" success bold))))
 
 ;;; Enable the use of custom code formatters, on which I have become wholly
 ;;; dependent for even the most basic of formatting, directly from Emacs.
@@ -302,6 +367,26 @@
 ;;; mashing. Alignment is useful outside of programming!
 (global-set-key (kbd "RET") 'newline-and-indent)
 
+;;; c-mode attempts to intelligently auto-indent code, which is well and good;
+;;; however, its default style is horrendous. Configure it to use something
+;;; slightly saner.
+(defvar awsmith/c-offsets-alist
+  '((arglist-cont-noempty . (c-lineup-gcc-asm-reg ++))
+    (arglist-intro . ++)
+    (brace-list-intro . +)
+    (case-label . +)
+    (inline-open . 0)
+    (innamespace . [0])
+    (member-init-intro . ++)
+    (statement-cont . ++)
+    (substatement-open . 0)))
+(add-hook 'c-mode-common-hook
+          #'(lambda ()
+              (c-set-style "k&r")
+              (setq c-basic-offset 2)
+              (mapcar #'(lambda (p) (add-to-list 'c-offsets-alist p))
+                      awsmith/c-offsets-alist)))
+
 ;;; Enable line numbers for all buffers. Lines are counted relative to the
 ;;; current line to faciliate the use of evil's counted motions, although the
 ;;; absolute index is displayed for the current line, which is highlighted.
@@ -382,6 +467,8 @@ Returns NIL for characters in this range."
                            (propertize "░" 'help-echo "Buffer has unsaved changes")
                          (propertize "█" 'help-echo "Buffer is saved")))
                 " "
+                (:eval (propertize (winum-get-number-string) 'face 'outline-2))
+                (:eval +awsmith/mode-line-separator+)
                 (:eval (awsmith/mode-line-buffer-directory))
                 (:eval (propertize "%b" 'face 'bold 'help-echo (buffer-file-name)))
                 (:eval (when (vc-backend (buffer-file-name))

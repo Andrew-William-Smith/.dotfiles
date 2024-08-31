@@ -34,3 +34,9 @@
 [submodule "zsh/.zshplug/fast-syntax-highlighting"]
 	path = zsh/.zshplug/fast-syntax-highlighting
 	url = https://github.com/zdharma-continuum/fast-syntax-highlighting
+[submodule "zsh/.zshplug/fzf-tab-completion"]
+	path = zsh/.zshplug/fzf-tab-completion
+	url = https://github.com/lincheney/fzf-tab-completion.git
+[submodule "zsh/.zshplug/zsh-fzf-history-search"]
+	path = zsh/.zshplug/zsh-fzf-history-search
+	url = https://github.com/joshskidmore/zsh-fzf-history-search.git

@@ -59,26 +59,43 @@ function genprompt() {
 }
 genprompt
 
-EDITOR="vim"
-COMPLETION_WAITING_DOTS="true"
+export EDITOR="vim"
+export COMPLETION_WAITING_DOTS="true"
 
 # Automatic sudo (M-e)
 insert_sudo() { zle beginning-of-line; zle -U "sudo " }
 zle -N insert-sudo insert_sudo
 bindkey "^[e" insert-sudo
 
-source ~/.zshplug/zsh-autosuggestions/zsh-autosuggestions.zsh
+#source ~/.zshplug/zsh-autosuggestions/zsh-autosuggestions.zsh
+source ~/.zshplug/fzf-tab-completion/zsh/fzf-zsh-completion.sh
 source ~/.zshplug/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
+source ~/.zshplug/zsh-fzf-history-search/zsh-fzf-history-search.zsh
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+
+# Use ^I to activate fzf for a single file, and ^P for multiple.
+insert-fzf-output() {
+  local output
+  output=$(fzf -m < /dev/tty | awk '{ print "\""$0"\"" }' | tr '\n' ' ') && LBUFFER+=${output}
+}
+zle -N insert-fzf-output
+
+bindkey '^I' fzf_completion
+bindkey '^P' insert-fzf-output
+
+# Set up the OCaml environment.
+eval `opam env`
 
 alias ls='ls --color=auto'
 alias la='ls -la'
+alias recd='cd "$(pwd)"'
+alias newemacs='open -n -a emacs'
 
 clear
 # fortune -a | cowsay -f $(ls /usr/local/share/cows | gshuf -n1) | lolcat
 echo "\033[1m`whoami`\033[00m on \033[1m`hostname`\033[0m"
 date
-echo "`uname -o` `uname -r`"
+echo "`uname -s` `uname -r`"
 echo
 
 function preexec() {
@@ -94,3 +111,30 @@ function precmd() {
         unset timer
     fi
 }
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/Users/awsmith/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/Users/awsmith/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/Users/awsmith/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/Users/awsmith/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+# rbenv configuration
+export PATH="/Users/awsmith/.rbenv:$PATH"
+eval "$(rbenv init - zsh)"
+
+# qmk configuration
+#export PATH="/opt/homebrew/opt/avr-gcc@8/bin:/opt/homebrew/opt/arm-none-eabi-gcc@8/bin:$PATH"
+
+# Latest LLVM and libc.
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+export LDFLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib -lunwind"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
