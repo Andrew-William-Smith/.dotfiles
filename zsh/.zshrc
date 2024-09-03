@@ -1,63 +1,25 @@
 HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1000
+
 setopt AUTO_CD
 setopt CORRECT
-setopt PUSHD_SILENT
-setopt PUSHD_TO_HOME
-
+setopt EXTENDED_GLOB
 setopt NO_BEEP
 setopt NO_CASE_GLOB
-setopt NUMERIC_GLOB_SORT
-setopt EXTENDED_GLOB
-
 setopt NO_CLOBBER
+setopt NUMERIC_GLOB_SORT
+setopt PUSHD_SILENT
+setopt PUSHD_TO_HOME
 setopt RM_STAR_WAIT
+setopt TRANSIENT_RPROMPT
 
 bindkey -v
 autoload -U compinit && compinit
+autoload -U colors && colors
 
 # Use an interactive menu for completions.
 zstyle ':completion:*:*:*:default' menu yes select search
-
-autoload -U colors && colors
-function genprompt() {
-  local i currdir currtime arrowcol gitbranch gitappendcalc gitappend gitcol exitappend localstat
-
-  # Determine if in a git repository
-  git rev-parse 2> /dev/null
-  if [ $? -ne 128 ]; then
-    if [[ `git status --porcelain` ]]
-      then gitcol="%{$fg[red]%}"
-      else gitcol="%{$fg[green]%}"
-    fi
-    gitbranch=`git rev-parse --abbrev-ref HEAD`
-    gitappendcalc=" on ${gitbranch}"
-    gitappend=" on ${gitcol}${gitbranch}%{$reset_color%}"
-  fi
-
-  currdir="`pwd | sed "s|^$HOME|~|" 2> /dev/null | sed 's/\([^/]\)[^/]*\//\1\//g'`"
-
-  if [ $rc -eq 0 ]
-    then arrowcol="%{$fg[green]%}"
-    else arrowcol="%{$fg[red]%}"; exitappend=" ${rc} ─"
-  fi
-
-  currtime="${exitappend}${HISTCMD} at `date "+%H:%M:%S"` (${timer_show}s)"
-  newprompt="%B%{${fg[cyan]}%}${currdir}%b%{${reset_color}%}${gitappend} "
-
-  for ((i=${#currdir}-1+${#gitappendcalc}; i<=COLUMNS-4-${#currtime}; i+=1)) do
-    newprompt="${newprompt}─"
-  done
-
-  if [ $rc -eq 0 ]
-  then exitappend=""
-  else exitappend=" %{${fg[red]}%}${rc}%{${reset_color}%} ─"
-  fi
-
-  export PROMPT="${newprompt}${exitappend} ${HISTCMD} at %{${fg[yellow]}%}`date "+%H:%M:%S"`%{${reset_color}%} (${timer_show}s)${arrowcol}▶%{${reset_color}%} "
-}
-genprompt
 
 export EDITOR="vim"
 export COMPLETION_WAITING_DOTS="true"
@@ -92,24 +54,90 @@ alias recd='cd "$(pwd)"'
 alias newemacs='open -n -a emacs'
 
 clear
-# fortune -a | cowsay -f $(ls /usr/local/share/cows | gshuf -n1) | lolcat
 echo "\033[1m`whoami`\033[00m on \033[1m`hostname`\033[0m"
 date
 echo "`uname -s` `uname -r`"
-echo
 
 function preexec() {
-    timer=${timer:-$SECONDS}
+  timer=${timer:-$SECONDS}
 }
 
 function precmd() {
-    rc=$?
-    if [ $timer ]; then
-        timer_show=$(($SECONDS - $timer))
-        echo
-        genprompt
-        unset timer
+  # Stash the exit code of the last command before we execute anything as part
+  # of the prompt.
+  local last_rc=$?
+
+  # Determine whether we are in a git repository: if we are, output the
+  # current branch and modification status.
+  git rev-parse 2> /dev/null
+  if [ $? -ne 128 ]; then
+    local git_branch="`git rev-parse --abbrev-ref HEAD`"
+    local git_suffix_logical=" on ${git_branch}"
+
+    if [[ `git status --porcelain` ]]; then
+      local git_suffix=" on %F{red}${git_branch}%f"
+    else
+      local git_suffix=" on %F{green}${git_branch}%f"
     fi
+  fi
+
+  # Truncate all directories in the CWD save for the last to their first
+  # character, allowing for entire paths to be displayed on a single line of an
+  # 80-column terminal.
+  local curdir="`pwd | sed "s|^$HOME|~|" 2> /dev/null | sed 's/\([^/]\)[^/]*\//\1\//g'`"
+
+  # If the last command exited successfully, print the prompt in green;
+  # otherwise, print it in red and include the exit code in the pre-prompt line.
+  if [ $last_rc -eq 0 ]; then
+    local prompt_colour="%F{green}"
+  else
+    local prompt_colour="%F{red}"
+    local rc_suffix_logical="${last_rc} ─ "
+    local rc_suffix="%F{red}${last_rc}%f ─ "
+  fi
+
+  # The pre-prompt line ends with the current time and duration of the previous
+  # command. In said line, we output this information in a colourised format;
+  # however, we also need to compute the display length to construct the
+  # horizontal rule that comprises the center of the line.
+  if [ $timer ]; then
+    local timer_show=$(($SECONDS - $timer))
+  else
+    local timer_show=0
+  fi
+  local time_suffix_logical="${rc_suffix_logical}${HISTCMD} at `date +"%H:%M:%S"` (${timer_show}s)"
+
+  # We have now constructed all portions of the pre-prompt line: determine the
+  # length of the horizontal rule in the center.
+  local rule_width=$((COLUMNS-${#curdir}-${#git_suffix_logical}-${#time_suffix_logical}-3))
+
+  # Use a different character for the prompt to differentiate between standard
+  # users and root.
+  if [[ $EUID > 0 ]]; then
+    local prompt_char='$'
+  else
+    local prompt_char='#'
+  fi
+
+  # The standard prompt is simply comprised of the prompt character. The entire
+  # multi-line inter-command output is not included in the prompt in order to
+  # circumvent persistent multi-line prompt display issues in some terminals.
+  export PROMPT="%B${prompt_colour}${prompt_char}%f%b "
+
+  # Output the pre-prompt line.
+  print ""
+  print -rP "%B%F{cyan}${curdir}%f%b${git_suffix} ${(l(${rule_width})(─))} ${rc_suffix}${HISTCMD} at %F{yellow}`date +"%H:%M:%S"`%f (${timer_show}s)"
+
+  # If there are any background jobs running, display them in a right prompt;
+  # otherwise, leave the right prompt empty.
+  local bg_jobs=`jobs | wc -l | sed 's/[[:space:]]//g'`
+  if [[ $bg_jobs > 0 ]]; then
+    local jobs_suffix=" %F{red}[${bg_jobs}]%f"
+  fi
+
+  export RPROMPT="%F{white}%n@%m%f${jobs_suffix}"
+
+  unset timer
 }
 
 # >>> conda initialize >>>

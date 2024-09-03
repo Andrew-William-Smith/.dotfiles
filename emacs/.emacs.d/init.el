@@ -467,7 +467,9 @@ Returns NIL for characters in this range."
                            (propertize "░" 'help-echo "Buffer has unsaved changes")
                          (propertize "█" 'help-echo "Buffer is saved")))
                 " "
-                (:eval (propertize (winum-get-number-string) 'face 'outline-2))
+                (:eval (propertize (winum-get-number-string)
+                                   'face 'outline-2
+                                   'weight 'bold))
                 (:eval +awsmith/mode-line-separator+)
                 (:eval (awsmith/mode-line-buffer-directory))
                 (:eval (propertize "%b" 'face 'bold 'help-echo (buffer-file-name)))
