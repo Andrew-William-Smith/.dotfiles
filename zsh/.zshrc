@@ -19,7 +19,8 @@ autoload -U compinit && compinit
 autoload -U colors && colors
 
 # Use an interactive menu for completions.
-zstyle ':completion:*:*:*:default' menu yes select search
+zstyle ':completion:*' fzf-search-display true
+#zstyle ':completion:*:*:*:default' menu yes select search
 
 export EDITOR="vim"
 export COMPLETION_WAITING_DOTS="true"
