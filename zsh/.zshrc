@@ -140,30 +140,3 @@ function precmd() {
 
   unset timer
 }
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/awsmith/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/Users/awsmith/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/Users/awsmith/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/Users/awsmith/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-# rbenv configuration
-export PATH="/Users/awsmith/.rbenv:$PATH"
-eval "$(rbenv init - zsh)"
-
-# qmk configuration
-#export PATH="/opt/homebrew/opt/avr-gcc@8/bin:/opt/homebrew/opt/arm-none-eabi-gcc@8/bin:$PATH"
-
-# Latest LLVM and libc.
-export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-export LDFLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib -lunwind"
-export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
